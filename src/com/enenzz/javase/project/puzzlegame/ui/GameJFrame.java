@@ -3,15 +3,31 @@ package com.enenzz.javase.project.puzzlegame.ui;
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.Border;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.Random;
 
 //游戏界面
-public class GameJFrame extends JFrame implements KeyListener {
+public class GameJFrame extends JFrame implements KeyListener, ActionListener {
     int[][] data = new int[4][4];
     int x, y;
     String path = "puzzlegame_image\\animal\\animal3\\";
+    int[][] win = {
+            {1,2,3,4},
+            {5,6,7,8},
+            {9,10,11,12},
+            {13,14,15,0}
+    };
+
+    //统计步数
+    int step = 0;
+
+    //下拉列表
+    JMenuItem replayGame = new JMenuItem("重新游戏");
+    JMenuItem reLogin = new JMenuItem("重新登录");
+    JMenuItem closeGame = new JMenuItem("关闭游戏");
 
     public GameJFrame() {
         //初始窗口
@@ -44,15 +60,25 @@ public class GameJFrame extends JFrame implements KeyListener {
             if (arr[i] == 0) {
                 x = i / 4;
                 y = i % 4;
-            } else {
-                data[i / 4][i % 4] = arr[i];
             }
+            data[i / 4][i % 4] = arr[i];
         }
     }
 
     private void initImage() {
         //清楚当前界面
         getContentPane().removeAll();
+
+        //步数
+        JLabel jlStep = new JLabel("步数: " + step);
+        jlStep.setBounds(50,30,100,20);
+        getContentPane().add(jlStep);
+
+        if (checkWin()) {
+            JLabel jlWin = new JLabel(new ImageIcon("D:\\Programme\\java-learning-journey\\puzzlegame_image\\win.png"));
+            jlWin.setBounds(203,287,197,73);
+            getContentPane().add(jlWin);
+        }
 
         //重新创建画面
         for (int i = 0; i < 4; i++) {
@@ -102,10 +128,6 @@ public class GameJFrame extends JFrame implements KeyListener {
         JMenu jTools = new JMenu("功能");
         JMenu jAbout = new JMenu("关于我们");
 
-        //下拉列表
-        JMenuItem replayGame = new JMenuItem("重新游戏");
-        JMenuItem reLogin = new JMenuItem("重新登录");
-        JMenuItem closeGame = new JMenuItem("关闭游戏");
         jTools.add(replayGame);
         jTools.add(reLogin);
         jTools.add(closeGame);
@@ -115,6 +137,11 @@ public class GameJFrame extends JFrame implements KeyListener {
 
         jb.add(jTools);
         jb.add(jAbout);
+
+        //添加功能
+        replayGame.addActionListener(this);
+        reLogin.addActionListener(this);
+        closeGame.addActionListener(this);
 
         setJMenuBar(jb);
     }
@@ -148,6 +175,12 @@ public class GameJFrame extends JFrame implements KeyListener {
 
     @Override
     public void keyReleased(KeyEvent e) {
+        //当游戏胜利时无法移动
+        if (checkWin()) {
+            return;
+        }
+
+        //获取键盘输入的信息
         int code = e.getKeyCode();
         //空图的坐标为x, y
         if (code == 37) {
@@ -158,6 +191,7 @@ public class GameJFrame extends JFrame implements KeyListener {
             data[x][y] = data[x][y + 1];
             data[x][y + 1] = 0;
             y++;
+            step++;
             initImage();
         } else if (code == 38) {
             //上
@@ -167,6 +201,7 @@ public class GameJFrame extends JFrame implements KeyListener {
             data[x][y] = data[x + 1][y];
             data[x + 1][y] = 0;
             x++;
+            step++;
             initImage();
         } else if (code == 39) {
             //右
@@ -174,8 +209,9 @@ public class GameJFrame extends JFrame implements KeyListener {
                 return;
             }
             data[x][y] = data[x][y - 1];
-            data[x ][y - 1] = 0;
+            data[x][y - 1] = 0;
             y--;
+            step++;
             initImage();
         } else if (code == 40) {
             //下
@@ -185,9 +221,49 @@ public class GameJFrame extends JFrame implements KeyListener {
             data[x][y] = data[x - 1][y];
             data[x - 1][y] = 0;
             x--;
+            step++;
             initImage();
         } else if (code == 65) {
             initImage();
+        } else if (code == 87) {
+            data = new int[][]{
+                    {1, 2, 3, 4},
+                    {5, 6, 7, 8},
+                    {9, 10, 11, 12},
+                    {13, 14, 15, 0},
+            };
+            initImage();
+        }
+    }
+
+    public boolean checkWin() {
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data[i].length; j++) {
+                //若有一个数据不同则返回true
+                if (data[i][j] != win[i][j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        Object ob = e.getSource();
+        if (ob == replayGame) {
+            //重置步数
+            step = 0;
+            //重置数据
+            initData();
+            //重新加载场景
+            initImage();
+        } else if (ob == reLogin) {
+            setVisible(false);
+            new LoginJFrame();
+
+        } else if (ob == closeGame) {
+            System.exit(0);
         }
     }
 }
